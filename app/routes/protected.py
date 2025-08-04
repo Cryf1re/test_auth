@@ -9,10 +9,10 @@ config = AuthXConfig(
     JWT_TOKEN_LOCATION=["headers"],
 )
 
-auth = AuthX(config=config)
+auth = AuthX(config=config) # type: ignore
 
 router = APIRouter()
 
 @router.get("/me")
-async def get_me(user=Depends(auth.get_current_user)):
-    return {"username": user["sub"]}
+async def get_me(subject: str = Depends(auth.get_current_subject)):
+    return {"username": subject}

@@ -1,12 +1,15 @@
 from fastapi import FastAPI
-from app.routes.auth import router as auth_router
-from app.routes.protected import router as protected_router
+from app.config import get_settings
+from app import models	# type: ignore
+from app import routes
 import uvicorn
+
+settings = get_settings()
 
 app = FastAPI()
 
-app.include_router(auth_router, prefix="/auth", tags=["auth"])
-app.include_router(protected_router, prefix="/protected", tags=["protected"])
+app.include_router(routes.auth.router, prefix="/auth", tags=["auth"])
+app.include_router(routes.protected.router, prefix="/protected", tags=["protected"])
 
 
 if __name__ == "__main__":

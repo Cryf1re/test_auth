@@ -15,7 +15,7 @@ config = AuthXConfig(
     JWT_TOKEN_LOCATION=["headers"],
 )
 
-auth = AuthX(config=config)
+auth = AuthX(config=config) # type: ignore
 
 router = APIRouter()
 
@@ -32,11 +32,11 @@ async def register(user: UserCreate, session: AsyncSession = Depends(get_async_s
     )
     session.add(new_user)
     await session.commit()
-    return auth.create_access_token(data={"sub": user.username})
+    return auth.create_access_token(uid=user.username)
 
 @router.post("/login")
 async def login(user: UserLogin, session: AsyncSession = Depends(get_async_session)):
     db_user = await authenticate_user(session, user.username, user.password)
     if not db_user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    return auth.create_access_token(data={"sub": db_user.username})
+    return auth.create_access_token(uid=user.username)

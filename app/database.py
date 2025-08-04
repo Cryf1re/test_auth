@@ -2,14 +2,18 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from app.config import get_settings
 from contextlib import asynccontextmanager
 from passlib.context import CryptContext
-from models.base import Base
+from sqlalchemy.orm import DeclarativeBase
 import asyncio
-import models # type: ignore
+from app import models # type: ignore
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 settings = get_settings()
 
+
+class Base(DeclarativeBase):
+
+    pass
 
 async_engine = create_async_engine(
     settings.database_url,
