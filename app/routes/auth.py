@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from authx import AuthX, AuthXConfig
 from app.config import get_settings
-from app.database import get_async_session
+from app.database import get_session
 from app.schemas.user import UserCreate, UserLogin
 from app.models.user import User
 from app.services.auth_service import hash_password, authenticate_user, get_user_by_username
@@ -20,7 +20,7 @@ auth = AuthX(config=config) # type: ignore
 router = APIRouter()
 
 @router.post("/register")
-async def register(user: UserCreate, session: AsyncSession = Depends(get_async_session)):
+async def register(user: UserCreate, session: AsyncSession = Depends(get_session)):
     existing = await get_user_by_username(session, user.username)
     if existing:
         raise HTTPException(status_code=400, detail="User already exists")
@@ -32,11 +32,17 @@ async def register(user: UserCreate, session: AsyncSession = Depends(get_async_s
     )
     session.add(new_user)
     await session.commit()
-    return auth.create_access_token(uid=user.username)
+
+    access = auth.create_access_token(uid=user.username)
+    refresh = auth.create_refresh_token(uid=user.username)
+    return {"access_token": access, "refresh_token": refresh}
 
 @router.post("/login")
-async def login(user: UserLogin, session: AsyncSession = Depends(get_async_session)):
+async def login(user: UserLogin, session: AsyncSession = Depends(get_session)):
     db_user = await authenticate_user(session, user.username, user.password)
     if not db_user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    return auth.create_access_token(uid=user.username)
+
+    access = auth.create_access_token(uid=user.username)
+    refresh = auth.create_refresh_token(uid=user.username)
+    return {"access_token": access, "refresh_token": refresh}
